@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Now Brief</title>
+<meta name="theme-color" content="#0E1419">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Now Brief">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./style.css?v=1">
+</head>
+<body>
+
+<!-- First-run setup: prompts for backend URL + token, stores in localStorage -->
+<section id="setup" class="setup" hidden>
+  <div class="setup-card">
+    <h1>Connect Now Brief</h1>
+    <p class="setup-lead">One-time setup. Enter your Mac's tailnet URL and the auth token from <code>~/.config/bmh/.env</code>.</p>
+    <label>
+      <span>Backend URL</span>
+      <input id="setup-url" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"
+             placeholder="https://bryans-macbook-pro-1.tail1ed408.ts.net:8485"
+             value="https://bryans-macbook-pro-1.tail1ed408.ts.net:8485">
+    </label>
+    <label>
+      <span>Auth token</span>
+      <input id="setup-token" type="password" autocomplete="off" autocorrect="off" autocapitalize="off"
+             placeholder="64-char hex from NOW_BRIEF_TOKEN">
+    </label>
+    <button id="setup-go" class="setup-btn">Connect</button>
+    <p id="setup-error" class="setup-error" hidden></p>
+    <p class="setup-hint">Stored only in this device's localStorage. Tap Refresh in the footer to re-test the connection.</p>
+  </div>
+</section>
+
+<main id="brief" class="brief" hidden>
+  <header class="hero">
+    <h1 id="slot-title" class="hero-title">Loading…</h1>
+    <p id="slot-lead" class="hero-lead">&nbsp;</p>
+    <p id="affirmation" class="affirmation" hidden></p>
+  </header>
+
+  <section id="weather-card" class="weather-card" hidden>
+    <div class="weather-city" id="weather-city"></div>
+    <div class="hours" id="hours"></div>
+    <div class="weather-detail">
+      <div class="wd-row" id="wd-storm" hidden>
+        <span class="wd-label">Storms Coming</span>
+        <span class="wd-val" id="wd-storm-val"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="alert-section" hidden>
+    <h2 class="accent-head">Check this <span class="accent">important update</span>.</h2>
+    <div class="alert-pill" id="alert-pill"></div>
+  </section>
+
+  <section id="events-section" hidden>
+    <h2 class="accent-head" id="events-head"></h2>
+    <div class="events" id="events-list"></div>
+  </section>
+
+  <section id="news-section" hidden>
+    <h2 class="accent-head"><span class="accent">Today's pinned</span> read.</h2>
+    <div class="news-cluster" id="news-cluster"></div>
+  </section>
+
+  <section id="load-section" hidden>
+    <h2 class="accent-head">1 <span class="accent">active load</span> in motion.</h2>
+    <div class="row-card" id="load-card"></div>
+  </section>
+
+  <section id="bills-section" hidden>
+    <h2 class="accent-head"><span class="accent">Bills</span> in view.</h2>
+    <div class="row-card" id="bills-card"></div>
+  </section>
+
+  <section id="streak-section" hidden>
+    <div class="chips" id="streak-chips"></div>
+  </section>
+
+  <footer class="foot">
+    <span class="foot-slot" id="foot-slot"></span>
+    <span class="foot-time" id="foot-time"></span>
+    <button id="install-btn" class="foot-btn install" hidden>📲 Install</button>
+    <button id="refresh-btn" class="foot-btn">Refresh</button>
+    <button id="reset-btn" class="foot-btn ghost" title="Re-enter backend URL + token">⚙</button>
+  </footer>
+</main>
+
+<script src="./app.js?v=1" defer></script>
+</body>
+</html>
