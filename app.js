@@ -337,6 +337,74 @@ async function playBrief() {
   }
 }
 
+// ── Wake-up push ───────────────────────────────────────────────
+// One-time opt-in: subscribe this device so the Pro can fire a "brief ready"
+// notification each morning. Tapping it opens Now Brief → tap ▶ Play.
+function urlBase64ToUint8Array(b64) {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const base64 = (b64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+function setPushState(state, msg) {
+  const btn = $("push-btn");
+  if (!btn) return;
+  const map = {
+    on: "🔔 Wake-up on",
+    working: "🔔 …",
+    denied: "🔔 Allow notifications in settings",
+    unsupported: "🔔 Not supported here",
+    error: "🔔 Tap to retry",
+    off: "🔔 Wake me when the brief is ready",
+  };
+  btn.textContent = map[state] || map.off;
+  btn.classList.toggle("on", state === "on");
+}
+
+function initPushState() {
+  const on = localStorage.getItem("nb_push") === "1"
+    && "Notification" in window && Notification.permission === "granted";
+  setPushState(on ? "on" : "off");
+}
+
+async function enablePush() {
+  const { backend, token } = getConfig();
+  if (!backend || !token) { showSetup(); return; }
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+    setPushState("unsupported"); return;
+  }
+  setPushState("working");
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { setPushState("denied"); return; }
+    const base = backend.replace(/\/$/, "");
+    const reg = await navigator.serviceWorker.ready;
+    const kr = await fetch(base + "/api/push/public-key", { headers: { "Authorization": "Bearer " + token } });
+    const { key } = await kr.json();
+    if (!key) { setPushState("error"); return; }
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key),
+      });
+    }
+    const payload = sub.toJSON();
+    payload.label = (navigator.userAgent || "").slice(0, 80);
+    const r = await fetch(base + "/api/push/subscribe", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    localStorage.setItem("nb_push", "1");
+    setPushState("on");
+  } catch (e) {
+    setPushState("error", e && e.message);
+  }
+}
+
 // ── PWA install ────────────────────────────────────────────────
 let deferredInstall = null;
 function wireInstall() {
@@ -370,6 +438,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("setup-token").addEventListener("keydown", (e) => { if (e.key === "Enter") attemptConnect(); });
   $("refresh-btn").addEventListener("click", refreshWithFeedback);
   $("play-brief").addEventListener("click", playBrief);
+  $("push-btn").addEventListener("click", enablePush);
+  initPushState();
   $("install-btn") && wireInstall();
   $("reset-btn").addEventListener("click", () => {
     if (confirm("Re-enter backend URL and token?")) { clearConfig(); showSetup(); }

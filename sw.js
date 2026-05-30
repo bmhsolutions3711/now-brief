@@ -1,10 +1,10 @@
 // Now Brief PWA shell — network-first SW. Backend API calls bypass cache.
-const CACHE_NAME = "nb-shell-v3";
+const CACHE_NAME = "nb-shell-v4";
 const SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=3",
-  "./app.js?v=3",
+  "./style.css?v=4",
+  "./app.js?v=4",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -41,4 +41,29 @@ self.addEventListener("fetch", (e) => {
       })
       .catch(() => caches.match(e.request).then((m) => m || caches.match("./")))
   );
+});
+
+// ── Web Push — wake-up "brief ready" ───────────────────────────────
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) {}
+  e.waitUntil(self.registration.showNotification(d.title || "Now Brief", {
+    body: d.body || "Your morning brief is ready.",
+    icon: d.icon || "./icons/icon-192.png",
+    badge: "./icons/icon-192.png",
+    tag: d.tag || "now-brief",
+    renotify: true,
+    requireInteraction: true,
+    data: { url: d.url || "./" },
+  }));
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "./";
+  e.waitUntil((async () => {
+    const wins = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of wins) { if ("focus" in c) { await c.focus(); return; } }
+    if (clients.openWindow) return clients.openWindow(url);
+  })());
 });

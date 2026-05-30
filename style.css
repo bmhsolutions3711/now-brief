@@ -381,6 +381,25 @@ html, body {
   0%, 100% { box-shadow: 0 0 0 0 rgba(167, 227, 204, 0.35); }
   50%      { box-shadow: 0 0 0 10px rgba(167, 227, 204, 0); }
 }
+.push-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  border: 1px solid var(--row-border);
+  border-radius: var(--radius-pill);
+  padding: 11px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.push-btn:hover { border-color: var(--mint); color: var(--mint); }
+.push-btn.on {
+  color: var(--mint);
+  border-color: rgba(167, 227, 204, 0.4);
+  background: rgba(167, 227, 204, 0.06);
+}
 
 .foot {
   position: fixed;
