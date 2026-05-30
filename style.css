@@ -345,6 +345,43 @@ html, body {
 }
 .chip.mint { border-color: rgba(167, 227, 204, 0.4); color: var(--mint); }
 
+/* ── Listen / play morning brief ─────────────────────────────────── */
+.listen-section { margin: 4px 4px 8px; }
+.play-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--mint);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 18px 20px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(167, 227, 204, 0.18);
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+.play-btn:hover { background: var(--mint-strong); }
+.play-btn:active { transform: scale(0.99); }
+.play-btn .play-ico { font-size: 20px; line-height: 1; }
+.play-btn.loading { opacity: 0.7; cursor: wait; }
+.play-btn.playing {
+  background: var(--row-bg);
+  color: var(--mint);
+  border: 1px solid rgba(167, 227, 204, 0.4);
+  box-shadow: none;
+  animation: play-pulse 2.4s ease-in-out infinite;
+}
+@keyframes play-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 227, 204, 0.35); }
+  50%      { box-shadow: 0 0 0 10px rgba(167, 227, 204, 0); }
+}
+
 .foot {
   position: fixed;
   bottom: 0;

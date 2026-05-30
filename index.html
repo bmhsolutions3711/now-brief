@@ -11,7 +11,7 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <link rel="icon" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./style.css?v=2">
+<link rel="stylesheet" href="./style.css?v=3">
 </head>
 <body>
 
@@ -43,6 +43,14 @@
     <p id="slot-lead" class="hero-lead">&nbsp;</p>
     <p id="affirmation" class="affirmation" hidden></p>
   </header>
+
+  <section id="listen-section" class="listen-section">
+    <button id="play-brief" class="play-btn" type="button" aria-label="Play your morning brief">
+      <span class="play-ico" aria-hidden="true">▶</span>
+      <span class="play-label">Play morning brief</span>
+    </button>
+    <audio id="brief-audio" preload="none"></audio>
+  </section>
 
   <section id="weather-card" class="weather-card" hidden>
     <div class="weather-city" id="weather-city"></div>
@@ -93,6 +101,6 @@
   </footer>
 </main>
 
-<script src="./app.js?v=2" defer></script>
+<script src="./app.js?v=3" defer></script>
 </body>
 </html>

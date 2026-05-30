@@ -280,6 +280,63 @@ async function attemptConnect() {
   }
 }
 
+// ── Morning brief audio ────────────────────────────────────────
+// The mp3 is generated on the Pro by Goose's morning loop (with the soul close
+// appended) and served at /api/brief/audio. An <audio src> can't send an Auth
+// header, so we fetch the file as a blob with the Bearer token and play it from an
+// object URL. The button tap is the user gesture that lets playback start.
+let briefObjURL = null;
+
+function setPlayState(state, msg) {
+  const btn = $("play-brief");
+  if (!btn) return;
+  const ico = btn.querySelector(".play-ico");
+  const label = btn.querySelector(".play-label");
+  btn.classList.remove("loading", "playing");
+  const set = (i, t) => { ico.textContent = i; label.textContent = t; };
+  switch (state) {
+    case "loading": set("…", "Loading your brief…"); btn.classList.add("loading"); break;
+    case "playing": set("⏸", "Playing — tap to pause"); btn.classList.add("playing"); break;
+    case "paused":  set("▶", "Paused — tap to resume"); break;
+    case "none":    set("▶", "No brief audio yet"); break;
+    case "auth":    set("▶", "Auth failed — check token"); break;
+    case "error":   set("▶", msg ? "Audio error: " + msg : "Couldn't load audio"); break;
+    default:        set("▶", "Play morning brief");
+  }
+}
+
+async function playBrief() {
+  const { backend, token } = getConfig();
+  if (!backend || !token) { showSetup(); return; }
+  const audio = $("brief-audio");
+
+  // Already loaded this session — just toggle play / pause / restart.
+  if (briefObjURL && audio.src === briefObjURL) {
+    if (audio.ended) audio.currentTime = 0;
+    if (audio.paused) audio.play(); else audio.pause();
+    return;
+  }
+
+  setPlayState("loading");
+  try {
+    const url = backend.replace(/\/$/, "") + "/api/brief/audio";
+    const r = await fetch(url, { cache: "no-cache", headers: { "Authorization": "Bearer " + token } });
+    if (r.status === 404) { setPlayState("none"); return; }
+    if (r.status === 401 || r.status === 403) { setPlayState("auth"); return; }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const blob = await r.blob();
+    if (briefObjURL) URL.revokeObjectURL(briefObjURL);
+    briefObjURL = URL.createObjectURL(blob);
+    audio.src = briefObjURL;
+    audio.onplay = () => setPlayState("playing");
+    audio.onpause = () => { if (!audio.ended) setPlayState("paused"); };
+    audio.onended = () => setPlayState();
+    await audio.play();
+  } catch (e) {
+    setPlayState("error", e && e.message);
+  }
+}
+
 // ── PWA install ────────────────────────────────────────────────
 let deferredInstall = null;
 function wireInstall() {
@@ -312,6 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("setup-go").addEventListener("click", attemptConnect);
   $("setup-token").addEventListener("keydown", (e) => { if (e.key === "Enter") attemptConnect(); });
   $("refresh-btn").addEventListener("click", refreshWithFeedback);
+  $("play-brief").addEventListener("click", playBrief);
   $("install-btn") && wireInstall();
   $("reset-btn").addEventListener("click", () => {
     if (confirm("Re-enter backend URL and token?")) { clearConfig(); showSetup(); }

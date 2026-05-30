@@ -1,10 +1,10 @@
 // Now Brief PWA shell — network-first SW. Backend API calls bypass cache.
-const CACHE_NAME = "nb-shell-v2";
+const CACHE_NAME = "nb-shell-v3";
 const SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=2",
-  "./app.js?v=2",
+  "./style.css?v=3",
+  "./app.js?v=3",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
