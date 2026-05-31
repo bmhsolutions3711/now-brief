@@ -12,6 +12,37 @@
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="stylesheet" href="./style.css?v=4">
+<script>
+/* BIK PWA standard — auto-update + #reset + scan-to-connect. Source: bik/pwa-standard/bik-pwa.js */
+(function(){
+  var apiKey="nb_backend_url", tokenKey="nb_token", hash=location.hash||"";
+  if(hash==="#reset"||hash==="#nuke"){(async function(){try{
+    var regs=navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?await navigator.serviceWorker.getRegistrations():[];
+    await Promise.all(regs.map(function(r){return r.unregister();}));
+    var keys=self.caches?await caches.keys():[];
+    await Promise.all(keys.map(function(k){return caches.delete(k);}));
+  }catch(e){} location.replace(location.pathname);})(); return;}
+  var m=hash.match(/[#&]cfg=([^&]+)/);
+  if(m){try{
+    var cfg=JSON.parse(decodeURIComponent(m[1]));
+    if(cfg.api)localStorage.setItem(apiKey,cfg.api.replace(/\/$/,""));
+    if(cfg.token)localStorage.setItem(tokenKey,cfg.token);
+    history.replaceState(null,"",location.pathname+location.search);
+    setTimeout(function(){location.reload();},50); return;
+  }catch(e){}}
+  if("serviceWorker"in navigator){
+    var hadController=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")reg.update();});
+      setInterval(function(){reg.update();},3600000);
+    }).catch(function(){});
+    var reloaded=false;
+    navigator.serviceWorker.addEventListener("controllerchange",function(){
+      if(reloaded||!hadController)return; reloaded=true; location.reload();
+    });
+  }
+})();
+</script>
 </head>
 <body>
 
