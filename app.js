@@ -158,6 +158,60 @@ function renderEvents(events) {
   });
 }
 
+async function markBillPaid(bill, btn) {
+  const { backend, token } = getConfig();
+  if (!backend || !token) { showSetup(); return; }
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = "…";
+  try {
+    const r = await fetch(backend.replace(/\/$/, "") + "/api/bill/mark-paid", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ type: bill.type, id: bill.id, cycle_key: bill.cycle_key }),
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    btn.textContent = "✓ Paid";
+    const row = btn.closest(".bill-row");
+    if (row) { row.style.opacity = "0.4"; row.style.pointerEvents = "none"; }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "Retry";
+    setTimeout(() => { btn.textContent = prev; }, 1500);
+  }
+}
+
+function renderBills(snap) {
+  const sec = $("bills-section");
+  const card = $("bills-card");
+  const list = snap.bills_list;
+  if (Array.isArray(list) && list.length) {
+    sec.hidden = false;
+    card.innerHTML = "";
+    list.forEach((b) => {
+      const row = document.createElement("div");
+      row.className = "bill-row";
+      row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.07);";
+      const when = b.due_in_days === 0 ? "due today" : b.due_in_days === 1 ? "due tomorrow" : `due in ${b.due_in_days}d`;
+      const amt = "$" + Number(b.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+      row.innerHTML = `
+        <div style="min-width:0;">
+          <div class="bill-name" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.55);">${amt} · ${when}</div>
+        </div>
+        <button class="bill-paid-btn" type="button" style="flex:none;background:rgba(0,230,118,0.14);color:#00E676;border:1px solid rgba(0,230,118,0.45);border-radius:16px;padding:7px 14px;font-size:13px;font-weight:700;">✓ Paid</button>`;
+      row.querySelector(".bill-name").textContent = b.name;
+      row.querySelector(".bill-paid-btn").addEventListener("click", function () { markBillPaid(b, this); });
+      card.appendChild(row);
+    });
+  } else if (snap.bills) {
+    sec.hidden = false;
+    card.textContent = snap.bills;
+  } else {
+    sec.hidden = true;
+  }
+}
+
 function render(snap) {
   $("slot-title").textContent = snap.title || "Now Brief";
   $("slot-lead").textContent = snap.lead || "";
@@ -195,8 +249,7 @@ function render(snap) {
   if (snap.active_load) { $("load-section").hidden = false; $("load-card").textContent = snap.active_load; }
   else $("load-section").hidden = true;
 
-  if (snap.bills) { $("bills-section").hidden = false; $("bills-card").textContent = snap.bills; }
-  else $("bills-section").hidden = true;
+  renderBills(snap);
 
   const chips = [];
   if (snap.streak) chips.push({ text: snap.streak.split("\n")[0], mint: true });
