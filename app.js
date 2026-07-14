@@ -498,6 +498,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirm("Re-enter backend URL and token?")) { clearConfig(); showSetup(); }
   });
 
+  // Resume — refetch data when the page comes back from bfcache/background.
+  // Standalone PWAs reopened from the app switcher restore from bfcache: the JS
+  // never re-runs, so data goes stale until a manual reload.
+  window.addEventListener('pageshow', (e) => { if (e.persisted) load(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+
   const cfg = getConfig();
   if (!cfg.backend || !cfg.token) {
     showSetup();
